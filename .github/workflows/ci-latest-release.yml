@@ -10,17 +10,6 @@ on:
   push:
     branches:
       - "main"
-      - "v*"
-    paths:
-      - "KubeArmor/**"
-      - "protobuf/**"
-      - ".github/workflows/ci-latest-release.yml"
-      - "pkg/**"
-      - "!STABLE-RELEASE"
-
-  create:
-    branches:
-      - "v*"
 
 # Declare default permissions as read only.
 permissions: read-all
@@ -28,7 +17,6 @@ permissions: read-all
 jobs:
   check:
     name: Check what pkg were updated
-    if: github.repository == 'kubearmor/kubearmor'
     runs-on: ubuntu-22.04
     timeout-minutes: 5
     outputs:
@@ -49,7 +37,6 @@ jobs:
   build:
     name: Create KubeArmor latest release
     needs: check
-    if: github.repository == 'kubearmor/kubearmor' && (needs.check.outputs.kubearmor == 'true' || ${{ github.ref }} != 'refs/heads/main')
     runs-on: ubuntu-latest-16-cores
     permissions:
       id-token: write
