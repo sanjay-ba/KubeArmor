@@ -32,9 +32,22 @@ env:
   PLATFORM: linux/amd64,linux/arm64/v8
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      trivy_scan_flag: ${{ steps.set_flag.outputs.flag }}
+    steps:
+      - id: set_flag
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "flag=${{ github.event.inputs.trivy_scan }}" >> $GITHUB_OUTPUT
+          else
+            echo "flag=true" >> $GITHUB_OUTPUT
+          fi      
   kubearmor-operator-release:
     name: Build & Push KubeArmor Operator
-    if: github.repository == 'kubearmor/kubearmor'        
+    if: github.repository == 'kubearmor/kubearmor'     
+    needs: prepare   
     runs-on: ubuntu-22.04
     permissions:
       id-token: write
@@ -89,12 +102,12 @@ jobs:
             console.log(`Creating operator release with tag: ${tag}`);
 
       - name: Build & Save KubeArmor Operator
-        if: ${{ github.event.inputs.trivy_scan}}
+        if: needs.prepare.outputs.trivy_scan_flag == 'true'
         working-directory: ./pkg/KubeArmorOperator
         run: PLATFORM=linux/amd64 make docker-buildx TAG=${{ steps.vars.outputs.tag }} BUILD_MODE=--load
 
       - name: Save KubeArmorOperator image to tar for Trivy Scan
-        if: ${{ github.event.inputs.trivy_scan}}
+        if: needs.prepare.outputs.trivy_scan_flag == 'true'
         run: |
           docker save -o kubearmor-operator.tar kubearmor/kubearmor-operator:${{ steps.tag.outputs.tag }}
           docker save -o kubearmor-snitch.tar kubearmor/kubearmor-snitch:${{ steps.tag.outputs.tag }}
