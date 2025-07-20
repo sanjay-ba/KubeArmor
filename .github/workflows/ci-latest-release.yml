@@ -30,7 +30,7 @@ on:
 # Declare default permissions as read only.
 permissions: read-all
 
-# Default value to skip trivy check on image push
+# Default value for trivy vulnerability check
 env:
   has_vulns: 'false'
 
